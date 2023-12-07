@@ -35,7 +35,6 @@ class Camera(BaseCamera):
             output = StreamingOutput()
             camera.start_recording(JpegEncoder(), FileOutput(output))
 
-            stream = io.BytesIO()
             while True:
                 with output.condition:
                     output.condition.wait()
