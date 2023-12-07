@@ -11,6 +11,8 @@ from picamera2 import Picamera2
 from picamera2.encoders import JpegEncoder
 from picamera2.outputs import FileOutput
 
+import pantilthat
+
 from base_camera import BaseCamera
 
 
@@ -59,6 +61,10 @@ def create_app(test_config=None):
     except OSError:
         pass
 
+    # Reset pan/tilt position
+    pantilthat.pan(0)
+    pantilthat.tilt(0)
+
     # Index
     @app.route('/')
     def index():
@@ -79,5 +85,36 @@ def create_app(test_config=None):
                     mimetype='multipart/x-mixed-replace; boundary=frame',
                     headers={'Cache-Control': 'no-cache',
                             'Pragma': 'no-cache'})
+    
+    # Pan/Tilt
+    def pan(offset):
+        current = pantilthat.get_pan()
+        new = current + offset
+        if new < -90:
+            new = -90
+        elif new > 90:
+            new = 90
+        pantilthat.pan(new)
+
+    def tilt(offset):
+        current = pantilthat.get_tilt()
+        new = current + offset
+        if new < -90:
+            new = -90
+        elif new > 90:
+            new = 90
+        pantilthat.tilt(new)
+
+    @app.route("/move/<direction>")
+    def move(direction):
+        if direction == "up":
+            tilt(-1)
+        elif direction == "down":
+            tilt(1)
+        elif direction == "left":
+            pan(1)
+        elif direction == "right":
+            pan(-1)
+        return ""
 
     return app

@@ -15,3 +15,4 @@ Note: not using venv and pip since got to use packages provided by the distro.
 * Thanks [@miguelgrinberg](https://blog.miguelgrinberg.com/) for the [Flask Video Streaming example repo](https://github.com/miguelgrinberg/flask-video-streaming/)
 * [Picamera2 Manual](https://datasheets.raspberrypi.com/camera/picamera2-manual.pdf)
 * [Pan-Tilt HAT Python library](https://github.com/pimoroni/pantilt-hat)
+* [Interface Icons](https://www.svgrepo.com/collection/super-basic-interface-icons/)

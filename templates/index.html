@@ -19,8 +19,64 @@
             height:100%;
             object-fit: cover;
         }
+
+        #move-bar {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 100%;
+            transform: translate(-50%, 0);
+            height: 12vh;
+            color: white;
+            font-size: 2em;
+            text-align: center;
+            padding-bottom: 1vh;
+        }
+
+        .move-button {
+            height: 100%;
+            max-width: 10vw;
+            opacity: 0.7;
+            padding-left: 2vw;
+            padding-left: 2vw;
+        }
     </style>
+    <script>
+        let moveTimer = null;
+
+        function move_cam(direction) {
+            fetch(`/move/${direction}`);
+        }
+
+        function start_move(direction) {
+            console.log(`start move ${direction}`);
+            if (moveTimer != null) {
+                clearInterval(moveTimer);
+            }
+            moveTimer = setInterval(() => {
+                move_cam(direction);
+            }, 100);
+        }
+
+        function stop_move() {
+            console.log('stop move');
+            clearInterval(moveTimer);
+        }
+
+        // Disable long-press context menu
+        window.oncontextmenu = function(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            return false;
+        };
+    </script>
 </head>
-<body>
+<body onmouseup="stop_move()" ondragend="stop_move()" ontouchcancel="stop_move()" ontouchend="stop_move()">
     <img id="video-stream" src="stream.mjpg"></img>
+    <div id="move-bar">
+        <img class="move-button" onmousedown="start_move('left')" ontouchstart="start_move('left')" src="{{ url_for('static', filename='left.svg') }}" style="height: 100%;"></img>
+        <img class="move-button" onmousedown="start_move('down')" ontouchstart="start_move('down')" src="{{ url_for('static', filename='down.svg') }}" style="height: 100%;"></img>
+        <img class="move-button" onmousedown="start_move('up')" ontouchstart="start_move('up')" src="{{ url_for('static', filename='up.svg') }}" style="height: 100%;"></img>
+        <img class="move-button" onmousedown="start_move('right')" ontouchstart="start_move('right')" src="{{ url_for('static', filename='right.svg') }}" style="height: 100%;"></img>
+    </div>
 </body>

@@ -18,7 +18,9 @@
                 "--app",
                 "app",
                 "run",
-                "--no-debugger"
+                "--no-debugger",
+                "-h",
+                "0.0.0.0"
             ],
             "jinja": true,
             "justMyCode": true,
