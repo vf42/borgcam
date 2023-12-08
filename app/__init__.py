@@ -1,54 +1,14 @@
 import os
-import io
 import multiprocessing
 import logging
 import time
-from threading import Condition
 import asyncio
 from typing import AsyncGenerator
 
 from quart import Quart, render_template, Response, websocket
 
-from picamera2 import Picamera2
-from picamera2.encoders import JpegEncoder
-from picamera2.outputs import FileOutput
-
-import pantilthat
-
-from base_camera import BaseCamera
-
-
-class StreamingOutput(io.BufferedIOBase):
-    """
-    Camera stream buffer.
-    """
-
-    def __init__(self):
-        self.frame = None
-        self.condition = Condition()
-
-    def write(self, buf):
-        with self.condition:
-            self.frame = buf
-            self.condition.notify_all()
-
-
-class Camera(BaseCamera):
-    @staticmethod
-    def frames():
-        with Picamera2() as camera:
-            camera.configure(camera.create_video_configuration())
-            # TODO: Move size values to configuration
-            # main={"size": (640, 480)}))
-            output = StreamingOutput()
-            camera.start_recording(JpegEncoder(), FileOutput(output))
-
-            while True:
-                with output.condition:
-                    output.condition.wait()
-                    frame = output.frame
-                yield frame
-
+from .camera import Camera
+from .hat import reset_hat, move_camera
 
 class Broker:
     """
@@ -90,9 +50,7 @@ def create_app(test_config=None):
     except OSError:
         pass
 
-    # Reset pan/tilt position
-    pantilthat.pan(0)
-    pantilthat.tilt(0)
+    reset_hat()
 
     # Index
     @app.route('/')
@@ -115,37 +73,6 @@ def create_app(test_config=None):
                         headers={'Cache-Control': 'no-cache',
                                  'Pragma': 'no-cache'})
 
-    # Pan/Tilt controls.
-    def pan(offset):
-        current = pantilthat.get_pan()
-        new = current + offset
-        if new < -90:
-            new = -90
-        elif new > 90:
-            new = 90
-        pantilthat.pan(new)
-
-    def tilt(offset):
-        current = pantilthat.get_tilt()
-        new = current + offset
-        if new < -90:
-            new = -90
-        elif new > 90:
-            new = 90
-        pantilthat.tilt(new)
-
-    def move_camera(direction):
-        if direction == "up":
-            tilt(-1)
-        elif direction == "down":
-            tilt(1)
-        elif direction == "left":
-            pan(1)
-        elif direction == "right":
-            pan(-1)
-        else:
-            raise ValueError(f"Invalid direction: {direction}")
-
     # Websocket
     broker = Broker()
 
@@ -154,7 +81,6 @@ def create_app(test_config=None):
             message = await websocket.receive()
             if message.startswith("move:"):
                 try:
-                    logging.info(message)
                     move_camera(message.split(":")[1])
                 except Exception as e:
                     logging.error(e)
