@@ -1,59 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>BorgCam</title>
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            width: 100vw;
-            height: 100vh;
-            overflow: hidden;
-        }
-
-        #video-stream {
-            margin: 0;
-            padding: 0;
-            width:100%;
-            height:100%;
-            object-fit: cover;
-        }
-
-        #move-bar {
-            position: absolute;
-            bottom: 0;
-            left: 50%;
-            width: 100%;
-            transform: translate(-50%, 0);
-            height: 12vh;
-            color: white;
-            font-size: 2em;
-            text-align: center;
-            padding-bottom: 1vh;
-        }
-
-        .move-button {
-            height: 100%;
-            max-width: 10vw;
-            opacity: 0.7;
-            padding-left: 2vw;
-            padding-left: 2vw;
-        }
-
-        .ui {
-        }
-
-        #center {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 65%;
-            height: 65%;
-            z-index: 10;
-        }
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <script>
         // Websocket connection.
         const ws = new WebSocket('ws://' + window.location.host + '/ws');
@@ -82,7 +33,7 @@
         }
 
         // Disable long-press context menu
-        window.oncontextmenu = function(event) {
+        window.oncontextmenu = function (event) {
             event.preventDefault();
             event.stopPropagation();
             return false;
@@ -100,23 +51,79 @@
         // Double tap handler for center element.
         let centerTapped = false;
         function centerTap() {
-            if(!centerTapped) {
+            if (!centerTapped) {
                 centerTapped = true;
-                setTimeout( function() { centerTapped = false; }, 300 );
+                setTimeout(function () { centerTapped = false; }, 300);
                 return false;
             }
             event.preventDefault();
             toggleUI();
         }
+
+        // Zoom
+        let zoomLevel = 0;
+
+        function setZoom() {
+            el = document.getElementById('video-stream');
+            el.style.transform = `scale(${1 + zoomLevel * 0.2})`;
+        }
+
+        function zoomIn() {
+            if (zoomLevel >= 10) {
+                return;
+            }
+            zoomLevel++;
+            setZoom();
+        }
+
+        function zoomOut() {
+            if (zoomLevel <= 0) {
+                return;
+            }
+            zoomLevel--;
+            setZoom();
+        }
+
+        let zoomTimer = null;
+
+        function startZoom(zfunc) {
+            if (zoomTimer != null) {
+                clearInterval(zoomTimer);
+            }
+            zoomTimer = setInterval(() => {
+                zfunc();
+            }, 100);
+        }
+
+        function stopZoom() {
+            clearInterval(zoomTimer);
+        }
+
+        // Stop all active events.
+        function stopAll() {
+            stopMove();
+            stopZoom();
+        }
     </script>
 </head>
-<body onmouseup="stopMove()" ondragend="stopMove()" ontouchcancel="stopMove()" ontouchend="stopMove()">
+
+<body onmouseup="stopAll()" ondragend="stopAll()" ontouchcancel="stopAll()" ontouchend="stopAll()">
     <img id="video-stream" src="stream.mjpg"></img>
     <div id="move-bar" class="ui">
-        <img class="move-button" onmousedown="startMove('left')" ontouchstart="startMove('left')" src="{{ url_for('static', filename='left.svg') }}" style="height: 100%;"></img>
-        <img class="move-button" onmousedown="startMove('down')" ontouchstart="startMove('down')" src="{{ url_for('static', filename='down.svg') }}" style="height: 100%;"></img>
-        <img class="move-button" onmousedown="startMove('up')" ontouchstart="startMove('up')" src="{{ url_for('static', filename='up.svg') }}" style="height: 100%;"></img>
-        <img class="move-button" onmousedown="startMove('right')" ontouchstart="startMove('right')" src="{{ url_for('static', filename='right.svg') }}" style="height: 100%;"></img>
+        <img class="move-button" onmousedown="startMove('left')" ontouchstart="startMove('left')"
+            src="{{ url_for('static', filename='left.svg') }}" style="height: 100%;"></img>
+        <img class="move-button" onmousedown="startMove('down')" ontouchstart="startMove('down')"
+            src="{{ url_for('static', filename='down.svg') }}" style="height: 100%;"></img>
+        <img class="move-button" onmousedown="startMove('up')" ontouchstart="startMove('up')"
+            src="{{ url_for('static', filename='up.svg') }}" style="height: 100%;"></img>
+        <img class="move-button" onmousedown="startMove('right')" ontouchstart="startMove('right')"
+            src="{{ url_for('static', filename='right.svg') }}" style="height: 100%;"></img>
+    </div>
+    <div id="zoom-bar" class="ui">
+        <img class="zoom-button" onmousedown="startZoom(zoomIn)" ontouchstart="startZoom(zoomIn)" src="{{ url_for('static', filename='plus.svg') }}"
+            style="height: 100%;"></img>
+        <img class="zoom-button" onmousedown="startZoom(zoomOut)" ontouchstart="startZoom(zoomOut)" src="{{ url_for('static', filename='minus.svg') }}"
+            style="height: 100%;"></img>
     </div>
     <div id="center" ondblclick="toggleUI()" ontouchstart="centerTap()">
     </div>

@@ -6,6 +6,7 @@ from picamera2.encoders import JpegEncoder
 from picamera2.outputs import FileOutput
 
 from .base_camera import BaseCamera
+from .config import CAMERA_SENSOR_MODE
 
 class StreamingOutput(io.BufferedIOBase):
     """
@@ -26,9 +27,12 @@ class Camera(BaseCamera):
     @staticmethod
     def frames():
         with Picamera2() as camera:
-            camera.configure(camera.create_video_configuration())
-            # TODO: Move size values to configuration
-            # main={"size": (640, 480)}))
+            mode = camera.sensor_modes[CAMERA_SENSOR_MODE]
+            camera.configure(camera.create_video_configuration(
+                sensor={
+                    "output_size": mode["size"],
+                    "bit_depth": mode["bit_depth"]
+                }))
             output = StreamingOutput()
             camera.start_recording(JpegEncoder(), FileOutput(output))
 

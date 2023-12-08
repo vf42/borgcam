@@ -1,0 +1,64 @@
+body {
+    margin: 0;
+    padding: 0;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    touch-action: manipulation;
+}
+
+#video-stream {
+    margin: 0;
+    padding: 0;
+    width:100%;
+    height:100%;
+    object-fit: cover;
+}
+
+#move-bar {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    width: 100%;
+    transform: translate(-50%, 0);
+    height: 12vh;
+    font-size: 2em;
+    text-align: center;
+    padding-bottom: 1vh;
+}
+
+.move-button {
+    height: 100%;
+    max-width: 10vw;
+    opacity: 0.7;
+    padding-left: 2vw;
+    padding-right: 2vw;
+}
+
+#zoom-bar {
+    position: absolute;
+    bottom: 12vh;
+    right: 0;
+    width: 8vw;
+    font-size: 2em;
+    text-align: center;
+    padding-right: 1vh;
+}
+
+.zoom-button {
+    width: 100%;
+    max-height: 8vw;
+    opacity: 0.7;
+    padding-top: 2vw;
+    padding-bottom: 2vw;
+}
+
+#center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 65%;
+    height: 65%;
+    z-index: 10;
+}
