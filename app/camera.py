@@ -36,8 +36,10 @@ class Camera(BaseCamera):
             output = StreamingOutput()
             camera.start_recording(JpegEncoder(), FileOutput(output))
 
+            frame_counter = 0
             while True:
                 with output.condition:
                     output.condition.wait()
                     frame = output.frame
-                yield frame
+                frame_counter += 1
+                yield (frame, frame_counter)

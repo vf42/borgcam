@@ -4,6 +4,7 @@ import logging
 import time
 import asyncio
 from typing import AsyncGenerator
+from threading import get_ident
 
 from quart import Quart, render_template, Response, websocket
 
@@ -61,8 +62,13 @@ def create_app(test_config=None):
     def gen(camera):
         """Video streaming generator function."""
         yield b'--frame\r\n'
+        prev_frame_nr = -1
+        my_ident = get_ident()
         while True:
-            frame = camera.get_frame()
+            (frame, frame_nr) = camera.get_frame(my_ident)
+            if frame_nr == prev_frame_nr:
+                raise Exception("Frame number did not change!")
+            prev_frame_nr = frame_nr
             yield b'Content-Type: image/jpeg\r\n\r\n' + frame\
                 + b'\r\n--frame\r\n'
 

@@ -8,35 +8,33 @@ import threading
 try:
     from greenlet import getcurrent as get_ident
 except ImportError:
-    try:
-        from thread import get_ident
-    except ImportError:
-        from _thread import get_ident
+    from threading import get_ident
 
 
 class CameraEvent(object):
-    """An Event-like class that signals all active clients when a new frame is
+    """
+    An Event-like class that signals all active clients when a new frame is
     available.
+    Since get_ident proved unreliable, 
     """
 
     def __init__(self):
         self.events = {}
 
-    def wait(self):
+    def wait(self, client=get_ident()):
         """Invoked from each client's thread to wait for the next frame."""
-        ident = get_ident()
-        if ident not in self.events:
+        if client not in self.events:
             # this is a new client
             # add an entry for it in the self.events dict
             # each entry has two elements, a threading.Event() and a timestamp
-            self.events[ident] = [threading.Event(), time.time()]
-        return self.events[ident][0].wait()
+            self.events[client] = [threading.Event(), time.time()]
+        return self.events[client][0].wait()
 
-    def set(self):
+    def set(self, client=get_ident()):
         """Invoked by the camera thread when a new frame is available."""
         now = time.time()
         remove = None
-        for ident, event in self.events.items():
+        for client, event in self.events.items():
             if not event[0].isSet():
                 # if this client's event is not set, then set it
                 # also update the last set timestamp to now
@@ -48,18 +46,19 @@ class CameraEvent(object):
                 # if the event stays set for more than 5 seconds, then assume
                 # the client is gone and remove it
                 if now - event[1] > 5:
-                    remove = ident
+                    remove = client
         if remove:
             del self.events[remove]
 
-    def clear(self):
+    def clear(self, client=get_ident()):
         """Invoked from each client's thread after a frame was processed."""
-        self.events[get_ident()][0].clear()
+        self.events[client][0].clear()
 
 
 class BaseCamera(object):
     thread = None  # background thread that reads frames from camera
     frame = None  # current frame is stored here by background thread
+    frame_nr = None
     last_access = 0  # time of last client access to the camera
     event = CameraEvent()
 
@@ -75,16 +74,15 @@ class BaseCamera(object):
             # wait until first frame is available
             BaseCamera.event.wait()
 
-    def get_frame(self):
+    def get_frame(self, client):
         """Return the current camera frame."""
         BaseCamera.last_access = time.time()
-
         # wait for a signal from the camera thread
-        BaseCamera.event.wait()
-        BaseCamera.event.clear()
+        BaseCamera.event.wait(client)
+        BaseCamera.event.clear(client)
 
-        return BaseCamera.frame
-
+        return (BaseCamera.frame, BaseCamera.frame_nr)
+    
     @staticmethod
     def frames():
         """"Generator that returns frames from the camera."""
@@ -95,8 +93,10 @@ class BaseCamera(object):
         """Camera background thread."""
         print('Starting camera thread.')
         frames_iterator = cls.frames()
-        for frame in frames_iterator:
+        for frame, frame_nr in frames_iterator:
+            print(f"Itr: {frame_nr}")
             BaseCamera.frame = frame
+            BaseCamera.frame_nr = frame_nr
             BaseCamera.event.set()  # send signal to clients
             time.sleep(0)
 
