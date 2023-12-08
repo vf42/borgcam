@@ -4,8 +4,10 @@ import multiprocessing
 import logging
 import time
 from threading import Condition
+import asyncio
+from typing import AsyncGenerator
 
-from flask import Flask, render_template, Response
+from quart import Quart, render_template, Response, websocket
 
 from picamera2 import Picamera2
 from picamera2.encoders import JpegEncoder
@@ -17,6 +19,10 @@ from base_camera import BaseCamera
 
 
 class StreamingOutput(io.BufferedIOBase):
+    """
+    Camera stream buffer.
+    """
+
     def __init__(self):
         self.frame = None
         self.condition = Condition()
@@ -32,8 +38,8 @@ class Camera(BaseCamera):
     def frames():
         with Picamera2() as camera:
             camera.configure(camera.create_video_configuration())
-                # TODO: Move size values to configuration
-                # main={"size": (640, 480)}))
+            # TODO: Move size values to configuration
+            # main={"size": (640, 480)}))
             output = StreamingOutput()
             camera.start_recording(JpegEncoder(), FileOutput(output))
 
@@ -44,8 +50,31 @@ class Camera(BaseCamera):
                 yield frame
 
 
+class Broker:
+    """
+    In-memory message broker.
+    https://quart.palletsprojects.com/en/latest/tutorials/chat_tutorial.html
+    """
+
+    def __init__(self) -> None:
+        self.connections = set()
+
+    async def publish(self, message: str) -> None:
+        for connection in self.connections:
+            await connection.put(message)
+
+    async def subscribe(self) -> AsyncGenerator[str, None]:
+        connection = asyncio.Queue()
+        self.connections.add(connection)
+        try:
+            while True:
+                yield await connection.get()
+        finally:
+            self.connections.remove(connection)
+
+
 def create_app(test_config=None):
-    app = Flask(__name__, instance_relative_config=True)
+    app = Quart(__name__, instance_relative_config=True)
     app.config.from_mapping(
         SECRET_KEY='dev',
     )
@@ -67,8 +96,8 @@ def create_app(test_config=None):
 
     # Index
     @app.route('/')
-    def index():
-        return render_template("index.html")
+    async def index():
+        return await render_template("index.html")
 
     # Camera stream
     def gen(camera):
@@ -82,11 +111,11 @@ def create_app(test_config=None):
     @app.route('/stream.mjpg')
     def stream():
         return Response(gen(Camera()),
-                    mimetype='multipart/x-mixed-replace; boundary=frame',
-                    headers={'Cache-Control': 'no-cache',
-                            'Pragma': 'no-cache'})
-    
-    # Pan/Tilt
+                        mimetype='multipart/x-mixed-replace; boundary=frame',
+                        headers={'Cache-Control': 'no-cache',
+                                 'Pragma': 'no-cache'})
+
+    # Pan/Tilt controls.
     def pan(offset):
         current = pantilthat.get_pan()
         new = current + offset
@@ -105,8 +134,7 @@ def create_app(test_config=None):
             new = 90
         pantilthat.tilt(new)
 
-    @app.route("/move/<direction>")
-    def move(direction):
+    def move_camera(direction):
         if direction == "up":
             tilt(-1)
         elif direction == "down":
@@ -115,6 +143,31 @@ def create_app(test_config=None):
             pan(1)
         elif direction == "right":
             pan(-1)
-        return ""
+        else:
+            raise ValueError(f"Invalid direction: {direction}")
+
+    # Websocket
+    broker = Broker()
+
+    async def _receive() -> None:
+        while True:
+            message = await websocket.receive()
+            if message.startswith("move:"):
+                try:
+                    logging.info(message)
+                    move_camera(message.split(":")[1])
+                except Exception as e:
+                    logging.error(e)
+                    await websocket.send(f"error:{e}")
+
+    @app.websocket('/ws')
+    async def ws():
+        try:
+            task = asyncio.ensure_future(_receive())
+            async for message in broker.subscribe():
+                await websocket.send(message)
+        finally:
+            task.cancel()
+            await task
 
     return app

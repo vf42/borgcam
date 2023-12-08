@@ -42,10 +42,17 @@
         }
     </style>
     <script>
+        // Websocket connection.
+        const ws = new WebSocket('ws://' + window.location.host + '/ws');
+        ws.addEventListener('message', function (event) {
+            console.log(event.data);
+        });
+
+        // Camera movement
         let moveTimer = null;
 
         function move_cam(direction) {
-            fetch(`/move/${direction}`);
+            ws.send(`move:${direction}`);
         }
 
         function start_move(direction) {

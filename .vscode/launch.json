@@ -5,20 +5,22 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Flask",
+            "name": "Quart",
             "type": "python",
             "python": "python",
+            "pythonArgs": [
+                // "-Xfrozen_modules=off"
+            ],
             "request": "launch",
-            "module": "flask",
+            "module": "quart",
             "env": {
-                "FLASK_DEBUG": "1",
-                "FLASK_ENV": "development"
+                "QUART_DEBUG": "1",
+                "QUART_ENV": "development"
             },
             "args": [
                 "--app",
                 "app",
                 "run",
-                "--no-debugger",
                 "-h",
                 "0.0.0.0"
             ],
