@@ -100,9 +100,35 @@
         stopMove();
         stopZoom();
     }
+
+    function toggleFullscreen() {
+        if (!document.fullscreenElement &&    // alternative standard method
+            !document.mozFullScreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement) {  // current working methods
+            if (document.documentElement.requestFullscreen) {
+                document.documentElement.requestFullscreen();
+            } else if (document.documentElement.mozRequestFullScreen) {
+                document.documentElement.mozRequestFullScreen();
+            } else if (document.documentElement.webkitRequestFullscreen) {
+                document.documentElement.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
+            } else if (document.documentElement.msRequestFullscreen) {
+                document.documentElement.msRequestFullscreen();
+            }
+        } else {
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            } else if (document.mozCancelFullScreen) {
+                document.mozCancelFullScreen();
+            } else if (document.webkitExitFullscreen) {
+                document.webkitExitFullscreen();
+            } else if (document.msExitFullscreen) {
+                document.msExitFullscreen();
+            }
+        }
+    }
 </script>
 {% endblock %}
 {% block body %}
+
 <body onmouseup="stopAll()" ondragend="stopAll()" ontouchcancel="stopAll()" ontouchend="stopAll()">
     <img id="video-stream" src="stream.mjpg"></img>
     <div id="move-bar" class="ui">
@@ -120,6 +146,10 @@
             src="{{ url_for('static', filename='plus.svg') }}" style="height: 100%;"></img>
         <img class="zoom-button" onmousedown="startZoom(zoomOut)" ontouchstart="startZoom(zoomOut)"
             src="{{ url_for('static', filename='minus.svg') }}" style="height: 100%;"></img>
+    </div>
+    <div id="top-bar" class="ui">
+        <img class="top-button" onclick="toggleFullscreen()"
+            src="{{ url_for('static', filename='fullscreen.svg') }}" style="height: 100%;"></img>
     </div>
     <div id="center" ondblclick="toggleUI()" ontouchstart="centerTap()">
     </div>
