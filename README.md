@@ -23,13 +23,15 @@ All configuration is done through environment variables. It's best done through 
 
 See `app/config.py` for the list of available configuration params.
 
-Note: by default, uvicorn server is started with SSL enabled, you should provide the ssl certificate or set SERVER_USE_SSL env variable to false.
+Important things to configure:
+* By default, uvicorn server is started with SSL enabled, you should provide the ssl certificate or set SERVER_USE_SSL env variable to false.
+* Provide your own JWT_SECRET_KEY and PASSWORD values - there's no user-based authentication, just a single password for all.
 
 ## Dependencies
 
 See `setup.sh` to see what has to be installed on top of default Raspberry Pi OS package, and execute it, respectively.
 
-Note: not using venv and pip since got to use packages provided by the distro.
+Note: not using venv and pip since got to use the packages provided by the distro.
 
 ## References
 

@@ -8,6 +8,10 @@ load_dotenv(override=True)
 APP_HOME = os.getenv(
     "APP_HOME") or "/home/vadim/borgcam"
 
+PASSWORD = os.getenv("PASSWORD") or "1701"  # Configure me!
+JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY") or "dev"  # Configure me!
+JWT_EXPIRATION = os.getenv("JWT_EXPIRATION") or 60
+
 LOG_PATH = os.getenv("LOG_PATH") or "/var/log/borgcam.log"
 LOG_LEVEL = os.getenv("LOG_LEVEL") or "INFO"
 
@@ -18,7 +22,7 @@ SERVER_HOST = os.getenv("SERVER_HOST") or "0.0.0.0"
 SERVER_PORT = os.getenv("SERVER_PORT") or 8000
 SERVER_PID = os.getenv("SERVER_PID") or os.path.join(
     "/tmp", "borgcam.pid")
-SERVER_USE_SSL =  ((os.getenv("SERVER_USE_SSL") or "true").lower() != "false")
+SERVER_USE_SSL = ((os.getenv("SERVER_USE_SSL") or "true").lower() != "false")
 
 SSL_PATH = os.getenv("SSL_PATH") or os.path.join(APP_HOME, "ssl")
 SSL_CERT = os.getenv("SSL_CERT") or os.path.join(SSL_PATH, "cert.pem")

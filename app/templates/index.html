@@ -1,118 +1,108 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends "base.html" %}
+{% block head %}
+<script>
+    // Websocket connection.
+    const wsPrefix = window.location.protocol == 'https:' ? 'wss://' : 'ws://';
+    const ws = new WebSocket(wsPrefix + window.location.host + '/ws');
+    ws.addEventListener('message', function (event) {
+        console.log(event.data);
+    });
 
-<head>
-    <meta charset="UTF-8">
-    <title>BorgCam</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
-    <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='apple-touch-icon.png') }}">
-    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='favicon-32x32.png') }}">
-    <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='favicon-16x16.png') }}">
-    <link rel="manifest" href="/site.webmanifest">
-    <script>
-        // Websocket connection.
-        const wsPrefix = window.location.protocol == 'https:' ? 'wss://' : 'ws://';
-        const ws = new WebSocket(wsPrefix + window.location.host + '/ws');
-        ws.addEventListener('message', function (event) {
-            console.log(event.data);
-        });
+    // Camera movement
+    let moveTimer = null;
 
-        // Camera movement
-        let moveTimer = null;
+    function moveCam(direction) {
+        ws.send(`move:${direction}`);
+    }
 
-        function moveCam(direction) {
-            ws.send(`move:${direction}`);
-        }
-
-        function startMove(direction) {
-            if (moveTimer != null) {
-                clearInterval(moveTimer);
-            }
-            moveTimer = setInterval(() => {
-                moveCam(direction);
-            }, 100);
-        }
-
-        function stopMove() {
+    function startMove(direction) {
+        if (moveTimer != null) {
             clearInterval(moveTimer);
         }
+        moveTimer = setInterval(() => {
+            moveCam(direction);
+        }, 100);
+    }
 
-        // Disable long-press context menu
-        window.oncontextmenu = function (event) {
-            event.preventDefault();
-            event.stopPropagation();
-            return false;
+    function stopMove() {
+        clearInterval(moveTimer);
+    }
+
+    // Disable long-press context menu
+    window.oncontextmenu = function (event) {
+        event.preventDefault();
+        event.stopPropagation();
+        return false;
+    };
+
+    // Show/hide all UI elements
+    let uiVisible = true;
+    function toggleUI() {
+        uiVisible = !uiVisible;
+        for (el of document.getElementsByClassName('ui')) {
+            el.style.display = uiVisible ? 'block' : 'none';
         };
+    }
 
-        // Show/hide all UI elements
-        let uiVisible = true;
-        function toggleUI() {
-            uiVisible = !uiVisible;
-            for (el of document.getElementsByClassName('ui')) {
-                el.style.display = uiVisible ? 'block' : 'none';
-            };
+    // Double tap handler for center element.
+    let centerTapped = false;
+    function centerTap() {
+        if (!centerTapped) {
+            centerTapped = true;
+            setTimeout(function () { centerTapped = false; }, 300);
+            return false;
         }
+        event.preventDefault();
+        toggleUI();
+    }
 
-        // Double tap handler for center element.
-        let centerTapped = false;
-        function centerTap() {
-            if (!centerTapped) {
-                centerTapped = true;
-                setTimeout(function () { centerTapped = false; }, 300);
-                return false;
-            }
-            event.preventDefault();
-            toggleUI();
+    // Zoom
+    let zoomLevel = 0;
+
+    function setZoom() {
+        el = document.getElementById('video-stream');
+        el.style.transform = `scale(${1 + zoomLevel * 0.2})`;
+    }
+
+    function zoomIn() {
+        if (zoomLevel >= 10) {
+            return;
         }
+        zoomLevel++;
+        setZoom();
+    }
 
-        // Zoom
-        let zoomLevel = 0;
-
-        function setZoom() {
-            el = document.getElementById('video-stream');
-            el.style.transform = `scale(${1 + zoomLevel * 0.2})`;
+    function zoomOut() {
+        if (zoomLevel <= 0) {
+            return;
         }
+        zoomLevel--;
+        setZoom();
+    }
 
-        function zoomIn() {
-            if (zoomLevel >= 10) {
-                return;
-            }
-            zoomLevel++;
-            setZoom();
-        }
+    let zoomTimer = null;
 
-        function zoomOut() {
-            if (zoomLevel <= 0) {
-                return;
-            }
-            zoomLevel--;
-            setZoom();
-        }
-
-        let zoomTimer = null;
-
-        function startZoom(zfunc) {
-            if (zoomTimer != null) {
-                clearInterval(zoomTimer);
-            }
-            zoomTimer = setInterval(() => {
-                zfunc();
-            }, 100);
-        }
-
-        function stopZoom() {
+    function startZoom(zfunc) {
+        if (zoomTimer != null) {
             clearInterval(zoomTimer);
         }
+        zoomTimer = setInterval(() => {
+            zfunc();
+        }, 100);
+    }
 
-        // Stop all active events.
-        function stopAll() {
-            stopMove();
-            stopZoom();
-        }
-    </script>
-</head>
+    function stopZoom() {
+        clearInterval(zoomTimer);
+    }
 
+    // Stop all active events.
+    function stopAll() {
+        stopMove();
+        stopZoom();
+    }
+</script>
+{% endblock %}
+{% block body %}
 <body onmouseup="stopAll()" ondragend="stopAll()" ontouchcancel="stopAll()" ontouchend="stopAll()">
     <img id="video-stream" src="stream.mjpg"></img>
     <div id="move-bar" class="ui">
@@ -126,11 +116,12 @@
             src="{{ url_for('static', filename='right.svg') }}" style="height: 100%;"></img>
     </div>
     <div id="zoom-bar" class="ui">
-        <img class="zoom-button" onmousedown="startZoom(zoomIn)" ontouchstart="startZoom(zoomIn)" src="{{ url_for('static', filename='plus.svg') }}"
-            style="height: 100%;"></img>
-        <img class="zoom-button" onmousedown="startZoom(zoomOut)" ontouchstart="startZoom(zoomOut)" src="{{ url_for('static', filename='minus.svg') }}"
-            style="height: 100%;"></img>
+        <img class="zoom-button" onmousedown="startZoom(zoomIn)" ontouchstart="startZoom(zoomIn)"
+            src="{{ url_for('static', filename='plus.svg') }}" style="height: 100%;"></img>
+        <img class="zoom-button" onmousedown="startZoom(zoomOut)" ontouchstart="startZoom(zoomOut)"
+            src="{{ url_for('static', filename='minus.svg') }}" style="height: 100%;"></img>
     </div>
     <div id="center" ondblclick="toggleUI()" ontouchstart="centerTap()">
     </div>
 </body>
+{% endblock %}
