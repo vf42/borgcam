@@ -1,0 +1,17 @@
+[Unit]
+Description=$SERVICE_NAME daemon
+After=network.target
+
+[Service]
+Type=simple
+User=$SERVICE_USER
+Group=$SERVICE_USER
+WorkingDirectory=$APP_HOME
+ExecStart=$APP_HOME/bin/server start
+ExecStop=$APP_HOME/bin/server stop
+KillMode=mixed
+TimeoutStopSec=5
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

@@ -6,10 +6,11 @@ import asyncio
 from typing import AsyncGenerator
 from threading import get_ident
 
-from quart import Quart, render_template, Response, websocket
+from quart import Quart, render_template, Response, websocket, make_response
 
 from .camera import Camera
 from .hat import reset_hat, move_camera
+
 
 class Broker:
     """
@@ -59,25 +60,25 @@ def create_app(test_config=None):
         return await render_template("index.html")
 
     # Camera stream
-    def gen(camera):
+    def gen_stream(camera):
         """Video streaming generator function."""
         yield b'--frame\r\n'
-        prev_frame_nr = -1
         my_ident = get_ident()
         while True:
-            (frame, frame_nr) = camera.get_frame(my_ident)
-            if frame_nr == prev_frame_nr:
-                raise Exception("Frame number did not change!")
-            prev_frame_nr = frame_nr
+            frame = camera.get_frame(my_ident)
             yield b'Content-Type: image/jpeg\r\n\r\n' + frame\
                 + b'\r\n--frame\r\n'
 
     @app.route('/stream.mjpg')
-    def stream():
-        return Response(gen(Camera()),
-                        mimetype='multipart/x-mixed-replace; boundary=frame',
-                        headers={'Cache-Control': 'no-cache',
-                                 'Pragma': 'no-cache'})
+    async def stream():
+        response = await make_response(gen_stream(Camera()), 200, {
+            "Content-Type": "multipart/x-mixed-replace; boundary=frame",
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+        })
+        response.timeout = None # Required to avoid disconnection after 1 min.
+        return response
 
     # Websocket
     broker = Broker()

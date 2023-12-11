@@ -1,0 +1,42 @@
+#!/usr/bin/python
+
+"""
+Install the server systemd service file template to /etc/systemd/system/.
+"""
+
+import subprocess
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+from app import config
+
+user = subprocess.check_output(["whoami"], encoding="utf-8").strip()
+if user != "root":
+    print("This script must be run as root. (Note: sudo -E)")
+    exit(1)
+
+
+def replace_config_values(s):
+    """
+    Replace configuration variables in a string with their values.
+    Should use $KEY syntax.
+    """
+    for (k, v) in config.__dict__.items():
+        if v is not None and\
+            (isinstance(v, str) or isinstance(v, int) or isinstance(v, float)
+             or isinstance(v, bool))\
+                and not k.startswith("_"):
+            s = s.replace(f"${k}", str(v))
+    return s
+
+
+with open("etc/systemd.service.template", "r", encoding="utf-8") as in_file:
+    service_conf = replace_config_values(in_file.read())
+    with open(f"/etc/systemd/system/{config.SERVICE_NAME}.service",
+              "w", encoding="utf-8") as out_file:
+        out_file.write(service_conf)
+    subprocess.run(["systemctl", "stop",
+                    f"{config.SERVICE_NAME}.service"], check=False)
+    subprocess.run(["systemctl", "enable", "--now",
+                    f"{config.SERVICE_NAME}.service"], check=True)

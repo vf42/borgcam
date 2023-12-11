@@ -1,0 +1,54 @@
+#!/usr/bin/python3
+
+"""
+Start the Uvicorn server with the app.
+Run ./scripts/install.sh to add this to systemd.
+"""
+
+from importlib import import_module
+import sys
+import subprocess
+from pathlib import Path
+
+# Ensure we can resolve app.
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+from app import config
+
+def start():
+    with open(config.LOG_PATH, "a", encoding="utf-8") as log_file:
+        cmd = ["uvicorn",
+            "--host", config.SERVER_HOST,
+            "--port", str(config.SERVER_PORT),
+            "--workers", str(config.SERVER_WORKERS),
+            "--ssl-keyfile", config.SSL_KEY,
+            "--ssl-certfile", config.SSL_CERT,
+            "--ssl-keyfile-password", config.SSL_PASSWORD,
+            "--factory",
+            "app:create_app"
+            ]
+        print(config.SERVER_USE_SSL)
+        if config.SERVER_USE_SSL == False:
+            cmd = cmd[0:7] + cmd[-2:]
+        print(" ".join(cmd))
+        subprocess.run(cmd,
+                       check=False,
+                       stdout=log_file,
+                       stderr=log_file )
+
+
+def stop():
+    # Systemd takes care of correctly killing the pids.
+    pass
+
+
+if __name__ == "__main__":
+    if sys.argv[1] == "start":
+        print("Starting the server")
+        start()
+    elif sys.argv[1] == "stop":
+        print("Stopping the server")
+        stop()
+    else:
+        print("Usage: server start|stop")
+        exit(1)

@@ -58,7 +58,6 @@ class CameraEvent(object):
 class BaseCamera(object):
     thread = None  # background thread that reads frames from camera
     frame = None  # current frame is stored here by background thread
-    frame_nr = None
     last_access = 0  # time of last client access to the camera
     event = CameraEvent()
 
@@ -80,8 +79,7 @@ class BaseCamera(object):
         # wait for a signal from the camera thread
         BaseCamera.event.wait(client)
         BaseCamera.event.clear(client)
-
-        return (BaseCamera.frame, BaseCamera.frame_nr)
+        return BaseCamera.frame
     
     @staticmethod
     def frames():
@@ -93,10 +91,8 @@ class BaseCamera(object):
         """Camera background thread."""
         print('Starting camera thread.')
         frames_iterator = cls.frames()
-        for frame, frame_nr in frames_iterator:
-            print(f"Itr: {frame_nr}")
+        for frame in frames_iterator:
             BaseCamera.frame = frame
-            BaseCamera.frame_nr = frame_nr
             BaseCamera.event.set()  # send signal to clients
             time.sleep(0)
 
