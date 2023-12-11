@@ -4,6 +4,8 @@ A Raspberry Pi camera project, using:
 * Pimoroni PanTilt HAT: http://pimoroni.com/pantilthat
 * ZeroCam NightVision: https://thepihut.com/products/zerocam-nightvision-for-pizero-raspberry-pi-3
 
+![v1 photo](docs/borgcam_v1.jpg)
+
 ## Usage
 
 Run `setup.sh` to install the dependencies and prepare the working environment.
