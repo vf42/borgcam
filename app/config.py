@@ -35,3 +35,9 @@ SERVICE_USER = os.getenv("SERVICE_USER") or "root"
 
 # Camera settings.
 CAMERA_SENSOR_MODE = 1
+
+# Pan/tilt hat settings.
+MIN_PAN = int(os.getenv("MIN_PAN") or -90)
+MAX_PAN = int(os.getenv("MAX_PAN") or 90)
+MIN_TILT = int(os.getenv("MIN_TILT") or -90)
+MAX_TILT = int(os.getenv("MAX_TILT") or 90)

@@ -10,7 +10,7 @@ from threading import get_ident
 from quart import Quart, render_template, Response, websocket, make_response, session, request
 from jwt import encode, decode, InvalidTokenError
 
-from . import config
+
 from .camera import Camera
 from .hat import reset_hat, move_camera
 

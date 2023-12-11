@@ -1,5 +1,7 @@
 import pantilthat
 
+from . import config
+
 def reset_hat():
     """
     Reset pan/tilt position
@@ -11,19 +13,19 @@ def reset_hat():
 def pan(offset):
     current = pantilthat.get_pan()
     new = current + offset
-    if new < -90:
-        new = -90
-    elif new > 90:
-        new = 90
+    if new < config.MIN_PAN:
+        new = config.MIN_PAN
+    elif new > config.MAX_PAN:
+        new = config.MAX_PAN
     pantilthat.pan(new)
 
 def tilt(offset):
     current = pantilthat.get_tilt()
     new = current + offset
-    if new < -90:
-        new = -90
-    elif new > 90:
-        new = 90
+    if new < config.MIN_TILT:
+        new = config.MIN_TILT
+    elif new > config.MAX_TILT:
+        new = config.MAX_TILT
     pantilthat.tilt(new)
 
 def move_camera(direction):
