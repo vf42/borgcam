@@ -35,6 +35,9 @@ See `setup.sh` to see what has to be installed on top of default Raspberry Pi OS
 
 Note: not using venv and pip since got to use the packages provided by the distro.
 
+JS dependencies:
+* https://github.com/richtr/NoSleep.js/
+
 ## References
 
 * Thanks [@miguelgrinberg](https://blog.miguelgrinberg.com/) for the [Flask Video Streaming example repo](https://github.com/miguelgrinberg/flask-video-streaming/)
