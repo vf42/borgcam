@@ -38,7 +38,8 @@ class Camera(BaseCamera):
                     "bit_depth": mode["bit_depth"]
                 },
             ))
-            camera.set_controls(CAMERA_CONTROLS_DAY)
+            camera.set_controls(CAMERA_CONTROLS_NIGHT if Camera.night_mode\
+                                else CAMERA_CONTROLS_DAY)
             output = StreamingOutput()
             camera.start_recording(JpegEncoder(), FileOutput(output))
             while True:
