@@ -6,6 +6,13 @@ body {
     overflow: hidden;
     touch-action: manipulation;
     background-color: #333333;
+    -webkit-touch-callout: none !important;
+}
+
+img {
+    user-select: none;
+    -webkit-user-drag: none;
+    -webkit-touch-callout: none !important;
 }
 
 #video-stream {
