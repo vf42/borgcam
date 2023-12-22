@@ -10,7 +10,7 @@ APP_HOME = os.getenv(
 
 PASSWORD = os.getenv("PASSWORD") or "1701"  # Configure me!
 JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY") or "dev"  # Configure me!
-JWT_EXPIRATION = os.getenv("JWT_EXPIRATION") or 60
+JWT_EXPIRATION = os.getenv("JWT_EXPIRATION") or 604800 # 7 days
 
 LOG_PATH = os.getenv("LOG_PATH") or "/var/log/borgcam.log"
 LOG_LEVEL = os.getenv("LOG_LEVEL") or "INFO"
@@ -35,6 +35,24 @@ SERVICE_USER = os.getenv("SERVICE_USER") or "root"
 
 # Camera settings.
 CAMERA_SENSOR_MODE = 1
+
+# Day and night camera controls.
+CAMERA_CONTROLS_DAY = {
+    "AnalogueGain": 10.0,
+    "Saturation": 0.5,
+    "Brightness": 0.0,
+    "Contrast": 1.1,
+    "Sharpness": 4.0,
+} if os.getenv("CAMERA_CONTROLS_DAY") is None\
+    else eval(os.getenv("CAMERA_CONTROLS_DAY"))
+CAMERA_CONTROLS_NIGHT = {
+    "AnalogueGain": 10.0,
+    "Saturation": 0.0,
+    "Brightness": 0.25,
+    "Contrast": 1.1,
+    "Sharpness": 4.0,
+} if os.getenv("CAMERA_CONTROLS_NIGHT") is None\
+    else eval(os.getenv("CAMERA_CONTROLS_NIGHT"))
 
 # Pan/tilt hat settings.
 MIN_PAN = int(os.getenv("MIN_PAN") or -90)

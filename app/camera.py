@@ -6,7 +6,8 @@ from picamera2.encoders import JpegEncoder
 from picamera2.outputs import FileOutput
 
 from .base_camera import BaseCamera
-from .config import CAMERA_SENSOR_MODE
+from .config import CAMERA_SENSOR_MODE, CAMERA_CONTROLS_DAY, CAMERA_CONTROLS_NIGHT
+
 
 class StreamingOutput(io.BufferedIOBase):
     """
@@ -24,6 +25,9 @@ class StreamingOutput(io.BufferedIOBase):
 
 
 class Camera(BaseCamera):
+    night_mode = False
+    mode_toggle_requested = False
+
     @staticmethod
     def frames():
         with Picamera2() as camera:
@@ -32,7 +36,9 @@ class Camera(BaseCamera):
                 sensor={
                     "output_size": mode["size"],
                     "bit_depth": mode["bit_depth"]
-                }))
+                },
+            ))
+            camera.set_controls(CAMERA_CONTROLS_DAY)
             output = StreamingOutput()
             camera.start_recording(JpegEncoder(), FileOutput(output))
             while True:
@@ -40,3 +46,16 @@ class Camera(BaseCamera):
                     output.condition.wait()
                     frame = output.frame
                 yield frame
+                if Camera.mode_toggle_requested:
+                    Camera.mode_toggle_requested = False
+                    print("Performing night mode toggle")
+                    if Camera.night_mode:
+                        camera.set_controls(CAMERA_CONTROLS_NIGHT)
+                    else:
+                        camera.set_controls(CAMERA_CONTROLS_DAY)
+
+    @staticmethod
+    def toggle_mode():
+        print("Night mode toggle requested")
+        Camera.mode_toggle_requested = True
+        Camera.night_mode = not Camera.night_mode

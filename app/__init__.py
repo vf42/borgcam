@@ -93,7 +93,7 @@ def create_app(test_config=None):
         password = form.get("password", None)
         if password == config.PASSWORD:
             session["token"] = encode({
-                "exp": time.time() + 3600
+                "exp": time.time() + config.JWT_EXPIRATION
             }, config.JWT_SECRET_KEY, algorithm="HS512")
             return await render_template("index.html")
         else:
@@ -138,6 +138,8 @@ def create_app(test_config=None):
                 except Exception as e:
                     logging.error(e)
                     await websocket.send(f"error:{e}")
+            elif message == "toggle_night":
+                Camera.toggle_mode()
 
     @app.websocket('/ws')
     @check_session_others

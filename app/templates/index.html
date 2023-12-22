@@ -125,6 +125,10 @@
             }
         }
     }
+
+    function toggleNightMode() {
+        ws.send(`toggle_night`);
+    }
 </script>
 {% endblock %}
 {% block body %}
@@ -150,6 +154,8 @@
     <div id="top-bar" class="ui">
         <img class="top-button" onclick="toggleFullscreen()"
             src="{{ url_for('static', filename='fullscreen.svg') }}" style="height: 100%;"></img>
+        <img class="top-button" onclick="toggleNightMode()"
+            src="{{ url_for('static', filename='night_mode.svg') }}" style="height: 100%;"></img>
     </div>
     <div id="center" ondblclick="toggleUI()" ontouchstart="centerTap()">
     </div>
