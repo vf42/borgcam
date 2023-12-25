@@ -12,6 +12,7 @@ ExecStop=$APP_HOME/bin/server stop
 KillMode=mixed
 TimeoutStopSec=5
 PrivateTmp=true
+Restart=always
 
 [Install]
 WantedBy=multi-user.target
