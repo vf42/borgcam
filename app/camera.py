@@ -60,7 +60,8 @@ class Camera(BaseCamera):
                             camera.set_controls(CAMERA_CONTROLS_DAY)
         except OSError as e:
             # We are getting "Cannot allocate memory" errors from the camera
-            # from time to time. TODO: Investigate, locate memory leak.
+            # from time to time.
+            # https://github.com/raspberrypi/picamera2/issues/887
             # Workaround: die and let systemd restart the service.
             logging.error(f"Camera error: {e}\n{traceback.format_exc()}")
             logging.error("Terminating the service")
